@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Bài tập Bảo hiểm – Mô phỏng đề thi</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;color:#fff;min-height:100vh;background:linear-gradient(125deg,#2e1065,#5b21b6,#1d4ed8,#6d28d9,#a16207,#7f1d1d,#4c1d95);background-size:500% 500%;animation:bg 22s ease infinite}
+@keyframes bg{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+.blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.35;z-index:0;animation:fl 14s ease-in-out infinite alternate}
+.b1{width:340px;height:340px;background:#fbbf24;left:-80px;top:10%}.b2{width:380px;height:380px;background:#3b82f6;right:-100px;top:40%;animation-delay:-5s}.b3{width:300px;height:300px;background:#ef4444;left:35%;bottom:-120px;animation-delay:-9s}
+@keyframes fl{to{transform:translate(60px,-70px) scale(1.25)}}
+#fw{position:fixed;inset:0;pointer-events:none;z-index:50}
+.w{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:14px}
+h1{margin:6px 0;font-size:1.5rem;text-align:center}
+.sub{text-align:center;opacity:.85;font-size:.9rem;margin-bottom:10px}
+.card{background:rgba(20,8,50,.62);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:9px 14px;color:#fff;background:rgba(255,255,255,.15);transition:.15s}
+button:hover:not(:disabled){transform:translateY(-2px);background:rgba(255,255,255,.28)}
+button:disabled{cursor:default}
+.tab.on{background:linear-gradient(90deg,#7c3aed,#2563eb);box-shadow:0 0 14px #8b5cf6}
+.tab .c{font-size:.75rem;opacity:.85}
+.mode.on{background:#f59e0b;color:#2b1200;font-weight:700}
+.bar{height:9px;background:rgba(255,255,255,.18);border-radius:9px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#fbbf24,#22c55e);transition:.4s}
+.st{white-space:pre-line;line-height:1.65;font-size:1.02rem}
+.st h2{margin:0 0 8px;font-size:1.15rem;color:#fde68a}
+table{border-collapse:collapse;margin:8px 0;width:100%;background:rgba(255,255,255,.07)}
+td,th{border:1px solid rgba(255,255,255,.3);padding:6px 10px;text-align:left}
+.qh{font-size:.85rem;color:#fcd34d;font-weight:700}
+.qt{font-size:1.12rem;font-weight:600;margin:6px 0 12px;line-height:1.5}
+.opt{display:flex;gap:10px;align-items:center;width:100%;text-align:left;margin:7px 0;padding:12px 14px;background:rgba(255,255,255,.1);border:2px solid transparent}
+.opt b{background:#6d28d9;border-radius:8px;min-width:28px;height:28px;display:grid;place-items:center}
+.opt.sel{border-color:#60a5fa;background:rgba(59,130,246,.3)}
+.opt.bad{border-color:#ef4444;background:rgba(239,68,68,.3);animation:sh .35s}
+.opt.ok{border-color:#22c55e;background:rgba(34,197,94,.3)}
+.opt.ok::after{content:"✔";margin-left:auto;font-size:1.4rem;color:#4ade80}
+.opt.bad::after{content:"✘";margin-left:auto;font-size:1.3rem;color:#f87171}
+@keyframes sh{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.num{margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.08)}
+.num input[type=number]{width:170px;font:inherit;padding:8px;border-radius:8px;border:2px solid #a78bfa;background:#1e1042;color:#fff}
+.num input[type=range]{width:100%;accent-color:#f59e0b;margin:10px 0}
+.go{background:linear-gradient(90deg,#f59e0b,#ef4444);font-weight:700}
+.msg{margin:10px 0;font-weight:700}
+.good{color:#4ade80}.err{color:#fca5a5}
+.ex{margin-top:12px;padding:12px;border-left:5px solid #fbbf24;background:rgba(251,191,36,.13);border-radius:8px;line-height:1.6;white-space:pre-line}
+.dots button{width:36px;height:36px;padding:0;border-radius:50%;font-size:.85rem}
+.dots .cur{outline:3px solid #fbbf24}.dots .d1{background:#16a34a}.dots .d2{background:#2563eb}.dots .d3{background:#dc2626}
+.score{text-align:center;font-size:1.2rem;padding:10px;border-radius:12px;background:linear-gradient(90deg,#7c3aed,#2563eb);margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<canvas id="fw"></canvas>
+<div class="w">
+<h1>📘 Quiz Bài tập Bảo hiểm</h1>
+<div class="sub">Không giới hạn thời gian • Đề bài giữ nguyên, thứ tự cố định • Đơn vị tiền: triệu đồng (trừ khi ghi khác)</div>
+<div class="card">
+ <div class="row" id="modes"></div>
+ <div class="row" id="tabs" style="margin-top:10px"></div>
+ <div class="bar"><i id="pb"></i></div>
+ <div class="sub" id="tot" style="margin:6px 0 0"></div>
+</div>
+<div id="app"></div>
+</div>
+<script>
+const N=(q,a,u,e,x)=>({q,a,u,e,x}),M=(q,o,c,e)=>({q,o,c,e});
+const B=[
+{t:"Bài 1. Bảo hiểm tài sản",
+s:"Công ty Minh Phát mua bảo hiểm vật chất cho một xe ô tô với các thông tin sau:\n1. Giá trị thực tế của xe tại thời điểm tham gia bảo hiểm: 900 triệu đồng.\n2. Số tiền bảo hiểm: 720 triệu đồng.\n3. Mức miễn thường: 8% giá trị tổn thất, nhưng không thấp hơn 3 triệu đồng/vụ.\n4. Hợp đồng còn hiệu lực tại thời điểm xảy ra tai nạn.\n5. Trước tai nạn, cụm đèn hậu bị tổn thất đã qua sử dụng và được xác định có tỷ lệ khấu hao 25%.\nTrong thời hạn bảo hiểm, xe gặp tai nạn thuộc phạm vi bảo hiểm. Các khoản thiệt hại và chi phí phát sinh:",
+h:"<table><tr><th>Khoản mục</th><th>Số tiền</th></tr><tr><td>Sửa chữa thân vỏ và cửa xe do tai nạn</td><td>110 triệu</td></tr><tr><td>Thay cụm đèn hậu bị vỡ</td><td>20 triệu</td></tr><tr><td>Cứu hộ, kéo xe về garage</td><td>7 triệu</td></tr><tr><td>Cẩu xe khỏi vị trí nguy hiểm để hạn chế tổn thất</td><td>5 triệu</td></tr><tr><td>Thay lốp đã hỏng trước tai nạn</td><td>6 triệu</td></tr><tr><td>Sơn đổi màu toàn bộ xe theo yêu cầu chủ xe</td><td>25 triệu</td></tr><tr><td>Thuê xe khác trong thời gian sửa chữa</td><td>15 triệu</td></tr><tr><td>Giám định tổn thất theo yêu cầu DNBH</td><td>4 triệu</td></tr></table>",
+q:[
+M("Xác định các khoản hợp lý thuộc phạm vi xem xét bồi thường.",["Thân vỏ 110; đèn hậu 20; cứu hộ 7; cẩu xe 5; giám định 4","Thân vỏ 110; đèn hậu 20; cứu hộ 7; thay lốp 6; thuê xe 15","Thân vỏ 110; đèn hậu 20; cẩu xe 5; sơn đổi màu 25; giám định 4","Tất cả 8 khoản mục"],0,"Loại 3 khoản: lốp hỏng TRƯỚC tai nạn (không do rủi ro bảo hiểm), sơn đổi màu (theo ý chủ xe, không phải thiệt hại), thuê xe (thiệt hại gián tiếp).\nCòn lại là thiệt hại trực tiếp + chi phí cứu hộ/hạn chế tổn thất + giám định theo yêu cầu DNBH.\nMẹo: 'trực tiếp do tai nạn' hoặc 'cứu hộ - hạn chế tổn thất - giám định' thì tính."),
+M("Xác định các khoản không thuộc trách nhiệm bồi thường.",["Thay lốp 6; sơn đổi màu 25; thuê xe 15 (tổng 46 triệu)","Thay lốp 6; cẩu xe 5; thuê xe 15","Sơn đổi màu 25; giám định 4; cứu hộ 7","Chỉ có thuê xe 15"],0,"Ba khoản loại: 6 + 25 + 15 = 46 triệu (xem lý do ở câu trước)."),
+N("Xác định giá trị thực tế của cụm đèn hậu sau khấu hao.",15,"triệu đồng","20 × (1 − 25%) = 15 triệu.\nMẹo: nhân 0,75.",[5,25]),
+N("Xác định tổng giá trị thiệt hại thực tế thuộc phạm vi bảo hiểm.",141,"triệu đồng","110 + 15 (đèn hậu đã khấu hao) + 7 + 5 + 4 = 141 triệu.\nMẹo: tổng 8 khoản = 192; trừ 46 khoản bị loại, trừ thêm 5 khấu hao đèn: 192 − 46 − 5 = 141.",[137,146,187]),
+N("Xác định tỷ lệ giữa số tiền bảo hiểm và giá trị thực tế của xe.",80,"%","720 ÷ 900 = 80% < 100% → bảo hiểm dưới giá trị, bồi thường theo tỷ lệ 80%."),
+N("Xác định số tiền bồi thường nếu áp dụng miễn thường không khấu trừ.",112.8,"triệu đồng","Mức miễn thường = max(8% × 141 = 11,28; 3) = 11,28. Tổn thất 141 > 11,28 → bồi thường đủ (không trừ miễn thường), nhân tỷ lệ 80%.\n141 × 0,8 = 112,8 triệu.\nMẹo: không khấu trừ = vượt ngưỡng thì trả trọn.",[141,101.52,129.72]),
+N("Xác định số tiền bồi thường nếu áp dụng miễn thường có khấu trừ.",101.52,"triệu đồng","Bồi thường theo tỷ lệ trước, rồi trừ miễn thường: 141 × 0,8 − 11,28 = 112,8 − 11,28 = 101,52 triệu.",[112.8,129.72,100.8]),
+N("Xác định mức thiệt hại mà tại đó số tiền bồi thường trong hai trường hợp miễn thường trên bằng nhau.",3,"triệu đồng","Không khấu trừ: tổn thất ≤ mức miễn thường thì trả 0, vượt thì trả đủ. Có khấu trừ: luôn trừ mức miễn thường.\nHai cách chỉ trùng nhau (cùng bằng 0) khi tổn thất ≤ mức miễn thường tối thiểu 3 triệu; vượt ngưỡng này cách không khấu trừ luôn trả nhiều hơn.\nĐáp số: 3 triệu.",[37.5,3.75,11.28]),
+N("Nếu muốn bảo hiểm đúng giá trị, Công ty Minh Phát cần tăng số tiền bảo hiểm thêm bao nhiêu?",180,"triệu đồng","900 − 720 = 180 triệu."),
+N("Nếu số tiền bảo hiểm được điều chỉnh lên 900 triệu đồng trước tai nạn, xác định lại số tiền bồi thường khi áp dụng miễn thường có khấu trừ.",129.72,"triệu đồng","Bảo hiểm đúng giá trị → tỷ lệ 100%: 141 − 11,28 = 129,72 triệu.",[112.8,101.52,141]),
+N("Giá trị thiệt hại thực tế bằng bao nhiêu để số tiền bồi thường có miễn thường khấu trừ là 90 triệu đồng?",125,"triệu đồng","Gọi L là thiệt hại. Miễn thường = 8%L (khi L ≥ 37,5). Bồi thường = 0,8L − 0,08L = 0,72L = 90 → L = 125 triệu.\nKiểm tra: 8% × 125 = 10 ≥ 3 ✔.",[112.5,100,150])
+]},
+{t:"Bài 2. Bảo hiểm tài sản",
+s:"Doanh nghiệp A mua bảo hiểm cháy, nổ cho một nhà xưởng:\n1. Giá trị bảo hiểm: 3 tỷ đồng.\n2. Số tiền bảo hiểm: 2,1 tỷ đồng.\n3. Thiệt hại thực tế do cháy: 800 triệu đồng.\n4. Mức khấu trừ: 30 triệu đồng/vụ.\n5. Tổn thất thuộc phạm vi bảo hiểm.\n6. Không có giá trị thu hồi và không có khoản bồi thường từ bên thứ ba.",
+q:[
+N("Xác định tỷ lệ bảo hiểm.",70,"%","2.100 ÷ 3.000 = 70%."),
+N("Xác định số tiền bồi thường nếu chỉ áp dụng bồi thường theo tỷ lệ.",560,"triệu đồng","800 × 70% = 560 triệu."),
+N("Xác định số tiền bồi thường nếu chỉ áp dụng tổn thất thứ nhất (rủi ro đầu tiên)",800,"triệu đồng","Rủi ro đầu tiên: bồi thường toàn bộ thiệt hại, tối đa bằng số tiền bảo hiểm: min(800; 2.100) = 800 triệu."),
+N("Xác định số tiền bồi thường nếu chỉ áp dụng miễn thường có khấu trừ.",770,"triệu đồng","800 − 30 = 770 triệu."),
+N("Xác định số tiền bồi thường nếu đồng thời áp dụng bồi thường theo tỷ lệ và mức khấu trừ.",530,"triệu đồng","800 × 70% − 30 = 560 − 30 = 530 triệu.\nMẹo: tỷ lệ trước, trừ khấu trừ sau.",[539,560,770]),
+N("Nếu thiệt hại thực tế là 25 triệu đồng, người được bảo hiểm nhận được bao nhiêu khi áp dụng mức khấu trừ?",0,"triệu đồng","25 < 30 (mức khấu trừ) → không vượt khấu trừ → nhận 0 (không âm).",[5,25,30]),
+N("Xác định số tiền bảo hiểm cần tăng thêm để tài sản được bảo hiểm đúng giá trị.",900,"triệu đồng","3.000 − 2.100 = 900 triệu."),
+N("Trong trường hợp bồi thường theo tỷ lệ kết hợp mức khấu trừ, xác định tổng phần tổn thất doanh nghiệp phải tự gánh chịu.",270,"triệu đồng","800 − 530 = 270 triệu (gồm 240 do bảo hiểm dưới giá trị + 30 khấu trừ)."),
+N("Giả sử số tiền bảo hiểm được nâng lên 3 tỷ đồng, xác định lại số tiền bồi thường khi áp dụng mức khấu trừ 30 triệu đồng.",770,"triệu đồng","Bảo hiểm đủ giá trị → không giảm theo tỷ lệ: 800 − 30 = 770 triệu."),
+N("Xác định giá trị thiệt hại thực tế tối thiểu (> 0) để số tiền bồi thường của doanh nghiệp bảo hiểm trong hai trong trường hợp hợp đồng chỉ áp dụng điều khoản bồi thường theo tỷ lệ và trường hợp hợp đồng chỉ áp dụng điều khoản bồi thường theo rủi ro đầu tiên là bằng nhau?",3000,"triệu đồng","Nếu L ≤ 2.100: rủi ro đầu tiên trả L, tỷ lệ trả 0,7L → khác nhau.\nNếu L > 2.100: rủi ro đầu tiên trả tối đa 2.100; tỷ lệ trả 0,7L = 2.100 → L = 3.000 triệu (đúng bằng giá trị bảo hiểm).",[2100,2130,2400]),
+N("Xác định giá trị thiệt hại thực tế tối thiểu (> 0) để số tiền bồi thường của doanh nghiệp bảo hiểm trong trường hợp hợp đồng chỉ áp dụng điều khoản bồi thường theo rủi ro đầu tiên và trường hợp hợp đồng chỉ áp dụng điều khoản miễn thường có khấu trừ bằng nhau?",2130,"triệu đồng","L ≤ 2.100: rủi ro đầu tiên trả L > L − 30.\nL > 2.100: rủi ro đầu tiên trả 2.100; khấu trừ trả L − 30 → 2.100 = L − 30 → L = 2.130 triệu.",[2100,3000,2070]),
+N("Xác định giá trị thiệt hại thực tế tối thiểu (> 0) để số tiền bồi thường của doanh nghiệp bảo hiểm trong trường hợp hợp đồng chỉ áp dụng điều khoản bồi thường theo tỷ lệ và trường hợp hợp đồng chỉ áp dụng điều khoản miễn thường có khấu trừ bằng nhau?",100,"triệu đồng","0,7L = L − 30 → 0,3L = 30 → L = 100 triệu.\nKiểm tra: 70 = 100 − 30 ✔.",[30,90,210])
+]},
+{t:"Bài 3. Bảo hiểm tài sản - thế quyền",
+s:"Công ty Bình Minh mua bảo hiểm cho kho hàng:\n1. Giá trị bảo hiểm: 1,5 tỷ đồng.\n2. Số tiền bảo hiểm: 1,2 tỷ đồng.\n3. Mức khấu trừ: 4% giá trị tổn thất, tối thiểu 8 triệu đồng/sự cố.\n4. Một vụ cháy thuộc phạm vi bảo hiểm gây thiệt hại 500 triệu đồng.\n5. Một người thứ ba được xác định chịu 70% trách nhiệm đối với thiệt hại.\n6. Người thứ ba có đầy đủ khả năng thực hiện nghĩa vụ bồi thường.\n7. Không có bảo hiểm trùng và không có giá trị thu hồi.",
+q:[
+M("Xác định tỷ lệ bảo hiểm và cho biết đây là bảo hiểm đúng, trên hay dưới giá trị.",["80% – bảo hiểm dưới giá trị","125% – bảo hiểm trên giá trị","100% – bảo hiểm đúng giá trị","70% – bảo hiểm dưới giá trị"],0,"1.200 ÷ 1.500 = 80% < 100% → bảo hiểm dưới giá trị."),
+N("Xác định phần tổn thất thuộc trách nhiệm DNBH trước khấu trừ.",400,"triệu đồng","500 × 80% = 400 triệu."),
+N("Xác định mức khấu trừ.",20,"triệu đồng","4% × 500 = 20 triệu > 8 (mức tối thiểu) → lấy 20 triệu.",[8,16,24]),
+N("Xác định số tiền DNBH bồi thường cho Công ty Bình Minh.",380,"triệu đồng","400 − 20 = 380 triệu.",[400,392,350]),
+N("Xác định trách nhiệm bồi thường của người thứ ba.",350,"triệu đồng","70% × 500 = 350 triệu."),
+N("Xác định số tiền tối đa DNBH được thế quyền yêu cầu người thứ ba hoàn trả.",350,"triệu đồng","Thế quyền không vượt quá min(số tiền DNBH đã bồi thường; trách nhiệm người thứ ba) = min(380; 350) = 350 triệu.",[380,400,266]),
+N("Xác định số tiền người thứ ba còn phải bồi thường trực tiếp cho Công ty Bình Minh.",0,"triệu đồng","Người thứ ba có trách nhiệm 350, DNBH thu hồi 350 qua thế quyền → còn 350 − 350 = 0 (DNBH thu hồi trước, trong phạm vi số đã trả).",[84,120,30]),
+N("Xác định tổng số tiền Công ty Bình Minh nhận được.",380,"triệu đồng","Chỉ nhận 380 từ DNBH + 0 từ người thứ ba = 380 triệu.",[400,464,500]),
+N("Xác định thiệt hại cuối cùng Công ty Bình Minh phải tự gánh chịu.",120,"triệu đồng","500 − 380 = 120 triệu (gồm 100 do dưới giá trị + 20 khấu trừ).",[36,20,100]),
+N("Xác định thiệt hại cuối cùng của DNBH sau khi thực hiện quyền thế quyền.",30,"triệu đồng","380 − 350 = 30 triệu.",[114,0,20])
+]},
+{t:"Bài 4. Kết hợp bảo hiểm vật chất xe và bảo hiểm TNDS",
+s:"Xe ô tô X của ông Nam được bảo hiểm vật chất:\n1. Giá trị xe: 1,5 tỷ đồng.\n2. Số tiền bảo hiểm: 1,2 tỷ đồng.\n3. Mức khấu trừ: 15 triệu đồng/vụ.\nXe Y của ông Hải được bảo hiểm TNDS:\n1. Giới hạn trách nhiệm tài sản: 120 triệu đồng/vụ.\n2. Giới hạn trách nhiệm về người: 180 triệu đồng/người/vụ.\nXe Y va chạm với xe X, gây:\n1. Thiệt hại xe X: 400 triệu đồng.\n2. Một người trên xe X bị thương, thiệt hại hợp lý: 220 triệu đồng.\nÔng Hải chịu 80% lỗi, phía xe X chịu 20% lỗi.\nHai hợp đồng đều còn hiệu lực và sự kiện thuộc phạm vi bảo hiểm. Ông Hải có khả năng thực hiện đầy đủ phần nghĩa vụ không được bảo hiểm chi trả.",
+q:[
+N("Xác định TNDS của ông Hải đối với thiệt hại xe X.",320,"triệu đồng","80% × 400 = 320 triệu."),
+N("Xác định số tiền DNBH TNDS bồi thường về tài sản.",120,"triệu đồng","min(320; giới hạn 120) = 120 triệu."),
+N("Xác định phần thiệt hại tài sản ông Hải phải tự thanh toán.",200,"triệu đồng","320 − 120 = 200 triệu."),
+N("Xác định TNDS của ông Hải đối với người bị thương.",176,"triệu đồng","80% × 220 = 176 triệu."),
+N("Xác định số tiền DNBH TNDS bồi thường về người.",176,"triệu đồng","min(176; giới hạn 180) = 176 triệu.",[180,220,120]),
+N("Xác định phần thiệt hại về người ông Hải phải tự thanh toán.",0,"triệu đồng","176 ≤ 180 → nằm trọn trong giới hạn → ông Hải trả 0.",[4,44,176]),
+N("Xác định tổng số tiền DNBH TNDS phải chi trả.",296,"triệu đồng","120 (tài sản) + 176 (người) = 296 triệu."),
+N("Xác định số tiền DNBH vật chất xe X phải bồi thường.",305,"triệu đồng","Vật chất trả không phụ thuộc lỗi. Tỷ lệ 1.200/1.500 = 80%.\n400 × 80% − 15 = 320 − 15 = 305 triệu.",[385,320,300]),
+N("Xác định số tiền DNBH vật chất xe có thể thực hiện quyền thế quyền đối với ông Hải trong phạm vi phù hợp.",305,"triệu đồng","Thế quyền ≤ min(số đã bồi thường 305; trách nhiệm của Hải với xe X 320) = 305 triệu.",[320,400,120]),
+N("Xác định thiệt hại cuối cùng của DNBH vật chất xe?",0,"triệu đồng","305 − 305 (thu hồi qua thế quyền) = 0.",[15,305,80]),
+N("Xác định số tiền mà ông Nam nhận được trực tiếp từ ông Hải sau khi ông Hải thưc hiện thanh toán theo thế quyền?",15,"triệu đồng","Hải phải trả tổng 320 cho xe X; đã trả 305 cho DNBH thế quyền → còn 320 − 305 = 15 triệu trả trực tiếp cho ông Nam (đúng bằng mức khấu trừ).",[80,95,305]),
+N("Xác định tổng số tiền mà ông Nam nhận được từ sự cố đối với xe?",320,"triệu đồng","305 (DNBH vật chất) + 15 (từ ông Hải) = 320 triệu.",[305,400,335]),
+N("Xác định tổng số tiền mà chủ xe X và người bị thương nhận được từ sự  cố trên?",496,"triệu đồng","Chủ xe X: 320; người bị thương: 176 (DNBH TNDS) → 320 + 176 = 496 triệu.",[481,625,400]),
+N("Xác định thiệt hại cuối cùng mà ô Nam chủ xe X phải tự gánh chịu.",80,"triệu đồng","400 − 320 = 80 triệu = 20% lỗi của chính phía xe X.\nMẹo: 20% × 400 = 80.",[95,15,0])
+]},
+{t:"Bài 5. BH TNDS – BH trùng",
+s:"Chủ xe M đồng thời tham gia hai hợp đồng bảo hiểm TNDS còn hiệu lực.\nHĐBH 1: - Giới hạn trách nhiệm về người: 80 triệu đồng/người/vụ.\n- Giới hạn trách nhiệm về tài sản: 100 triệu đồng/vụ.\nHĐBH 2: - Giới hạn trách nhiệm về người: 120 triệu đồng/người/vụ.\n- Giới hạn trách nhiệm về tài sản: 150 triệu đồng/vụ.\nHai hợp đồng cùng bảo hiểm một trách nhiệm và áp dụng nguyên tắc đóng góp theo tỷ lệ giới hạn trách nhiệm.\nXe M gây tai nạn và chủ xe M chịu 100% trách nhiệm. Thiệt hại:\n1. Thiệt hại về người: 150 triệu đồng.\n2. Thiệt hại tài sản: 180 triệu đồng.",
+q:[
+N("Xác định tổng giới hạn trách nhiệm về người.",200,"triệu đồng","80 + 120 = 200 triệu."),
+M("Xác định tỷ lệ đóng góp của HĐBH 1 và HĐBH 2 đối với thiệt hại về người.",["HĐBH 1: 40% – HĐBH 2: 60%","HĐBH 1: 50% – HĐBH 2: 50%","HĐBH 1: 60% – HĐBH 2: 40%","HĐBH 1: 30% – HĐBH 2: 70%"],0,"80 ÷ 200 = 40%; 120 ÷ 200 = 60%."),
+N("Xác định số tiền HĐBH 1 bồi thường về người.",60,"triệu đồng","40% × 150 = 60 triệu (≤ giới hạn 80).",[75,80,90]),
+N("Xác định số tiền HĐBH 2 bồi thường về người.",90,"triệu đồng","60% × 150 = 90 triệu (≤ giới hạn 120).",[60,75,120]),
+N("Xác định tổng giới hạn trách nhiệm về tài sản.",250,"triệu đồng","100 + 150 = 250 triệu."),
+M("Xác định tỷ lệ đóng góp của hai hợp đồng đối với thiệt hại tài sản.",["HĐBH 1: 40% – HĐBH 2: 60%","HĐBH 1: 50% – HĐBH 2: 50%","HĐBH 1: 60% – HĐBH 2: 40%","HĐBH 1: 45% – HĐBH 2: 55%"],0,"100 ÷ 250 = 40%; 150 ÷ 250 = 60%."),
+N("Xác định số tiền HĐBH 1 bồi thường về tài sản.",72,"triệu đồng","40% × 180 = 72 triệu (≤ giới hạn 100).",[90,100,108]),
+N("Xác định số tiền HĐBH 2 bồi thường về tài sản.",108,"triệu đồng","60% × 180 = 108 triệu (≤ giới hạn 150).",[72,90,150]),
+M("Xác định tổng số tiền mỗi DNBH phải chi trả cho toàn bộ vụ tai nạn.",["HĐBH 1: 132 triệu – HĐBH 2: 198 triệu","HĐBH 1: 165 triệu – HĐBH 2: 165 triệu","HĐBH 1: 180 triệu – HĐBH 2: 150 triệu","HĐBH 1: 100 triệu – HĐBH 2: 230 triệu"],0,"HĐBH 1: 60 + 72 = 132. HĐBH 2: 90 + 108 = 198. Tổng 330."),
+N("Xác định phần thiệt hại cuối cùng chủ xe M phải tự chịu.",0,"triệu đồng","Tổng thiệt hại 150 + 180 = 330 = 132 + 198 → chủ xe M tự chịu 0.",[30,60,72])
+]},
+{t:"Bài 6. Bảo hiểm hàng hóa vận chuyển bằng đường biển",
+s:"Công ty Thương mại B nhập khẩu 1.200 tấn cà phê, đóng thành các bao, mỗi bao 60 kg, vận chuyển bằng đường biển từ Brazil về Việt Nam. Giá trị hàng hóa phân bổ đều theo trọng lượng, Bảo hiểm theo điều kiện ICC (A). Tỷ giá: 1 USD = 25.500 đồng\n1. Giá CFR của toàn bộ lô hàng: 3.000.000 USD.\n2. Giá trị bảo hiểm gồm 10% lãi ước tính trên giá CFR.\n3. Số tiền bảo hiểm bằng 100% giá trị bảo hiểm.\n4. Tỷ lệ phí: 0,30% số tiền bảo hiểm.\nTrong quá trình dỡ hàng, một số bao bị rơi xuống khu vực có nước. Giám định xác định:\n1. 100 bao tổn thất toàn bộ, không còn giá trị thương mại.\n2. 150 bao bị ẩm, giảm 40% giá trị. Hàng còn lại không bị thiệt hại.\nCác chi phí phát sinh:\n1. Thu gom, di chuyển và bảo quản khẩn cấp: 35 triệu đồng.\n2. Sấy và xử lý số hàng bị ẩm: 25 triệu đồng.\n3. Giám định theo yêu cầu DNBH: 8 triệu đồng.\n4. Vệ sinh kho riêng của doanh nghiệp: 12 triệu đồng, không cần thiết để hạn chế tổn thất của hàng được bảo hiểm.\nGiả định các tổn thất trên thuộc phạm vi bảo hiểm và không thuộc trường hợp loại trừ.",
+q:[
+N("Xác định tổng số bao cà phê của lô hàng.",20000,"bao","1.200 tấn = 1.200.000 kg. 1.200.000 ÷ 60 = 20.000 bao.",[2000,200000]),
+N("Xác định giá trị CIF của một bao cà phê.",150,"USD","Giá trị hàng phân bổ đều theo trọng lượng: 3.000.000 ÷ 20.000 = 150 USD/bao (giá gốc theo dữ kiện đề; phần phí bảo hiểm tính ở câu sau).",[165,150.49]),
+N("Xác định giá trị bảo hiểm của toàn bộ lô hàng.",3300000,"USD","3.000.000 × (1 + 10%) = 3.300.000 USD.",[3000000,3009900,3600000]),
+N("Xác định số tiền bảo hiểm.",3300000,"USD","STBH = 100% × giá trị bảo hiểm = 3.300.000 USD.",[3000000,330000,3030000]),
+N("Xác định giá trị bảo hiểm của một bao hàng.",165,"USD","3.300.000 ÷ 20.000 = 165 USD (hay 150 × 1,1).",[150,155,181.5]),
+M("Xác định phí bảo hiểm bằng USD và quy đổi sang VNĐ.",["9.900 USD ≈ 252.450.000 đồng (252,45 triệu)","9.000 USD ≈ 229.500.000 đồng","9.900 USD ≈ 25.245.000 đồng","10.890 USD ≈ 277.695.000 đồng"],0,"Phí = 0,30% × 3.300.000 = 9.900 USD.\nĐổi VNĐ: 9.900 × 25.500 = 252.450.000 đồng."),
+N("Xác định giá trị tổn thất của 100 bao bị tổn thất toàn bộ.",420.75,"triệu đồng","100 × 165 = 16.500 USD × 25.500 = 420.750.000 đồng = 420,75 triệu.",[382.5,252.45,16500]),
+N("Xác định giá trị tổn thất của 150 bao bị giảm 40% giá trị.",252.45,"triệu đồng","150 × 165 × 40% = 9.900 USD × 25.500 = 252.450.000 đồng = 252,45 triệu.",[630.99,420.75,229.5]),
+N("Xác định các chi phí hợp lý thuộc phạm vi xem xét bồi thường.",68,"triệu đồng","Hợp lý: 35 (hạn chế tổn thất) + 25 (sấy xử lý) + 8 (giám định theo yêu cầu DNBH) = 68 triệu.\nLoại 12 triệu vệ sinh kho (không cần để hạn chế tổn thất).",[80,60,43]),
+N("Xác định tổng số tiền DNBH phải thanh toán cho chủ hàng, gồm tổn thất hàng hóa và các chi phí hợp lý.",741.2,"triệu đồng","420,75 + 252,45 + 68 = 741,2 triệu.\nBảo hiểm đủ giá trị (STBH = giá trị bảo hiểm) nên không giảm theo tỷ lệ.",[753.2,673.2,809.2])
+]}];
+
+/* ---------- logic ---------- */
+let mode='study',cb=0,ci=0;const R={},SUB={};
+const $=id=>document.getElementById(id),L='ABCD';
+const fmt=(v,u)=>v.toLocaleString('vi-VN',{maximumFractionDigits:2})+(u?' '+u:'');
+const OP={};
+function opts(b,i){const k=b+'-'+i;if(OP[k])return OP[k];const q=B[b].q[i];let a=q.a,c=(q.x||[]).slice();
+ const f=q.u=='%'?[a-10,a+10,a-20,a+20]:[a*.8,a*1.25,a*.5,a*1.5,a+30,a*.9,a*2];
+ for(const v of f){if(c.length>=3)break;const r=Math.round(v*100)/100;if(r>=0&&r!=a&&!c.includes(r)&&!(q.u=='%'&&r>100))c.push(r)}
+ for(let k2=1;c.length<3;k2++){const r=a+k2*10;if(!c.includes(r))c.push(r)}
+ c=c.slice(0,3);c.splice((i*3+b)%4,0,a);return OP[k]=c}
+const isOk=(q,v)=>v!==undefined&&(q.o?v===q.c:Math.abs(v-q.a)<0.005);
+const ok=(b,i)=>{const r=R[b+'-'+i];return !!r&&isOk(B[b].q[i],r.v)};
+const fbk=(b,i)=>{const r=R[b+'-'+i]||{};return mode=='study'?(ok(b,i)||r.rev):!!SUB[b]};
+function stat(b,i){const r=R[b+'-'+i];if(fbk(b,i))return ok(b,i)?'d1':'d3';return r&&r.v!==undefined&&mode=='exam'?'d2':''}
+function pick(v){const k=cb+'-'+ci,r=R[k]=R[k]||{};if(fbk(cb,ci))return;r.v=v;
+ if(mode=='study'&&ok(cb,ci))boom();render()}
+function reveal(){const k=cb+'-'+ci;(R[k]=R[k]||{}).rev=true;render()}
+function submit(){SUB[cb]=true;const c=B[cb].q.filter((_,i)=>ok(cb,i)).length;if(c==B[cb].q.length)boom();render()}
+function go(d){ci=Math.min(B[cb].q.length-1,Math.max(0,ci+d));render()}
+function setMode(m){mode=m;render()}
+function setB(b){cb=b;ci=0;render()}
+function chk(){const v=parseFloat($('nv').value);if(isNaN(v))return;pick(v)}
+function syncN(){$('rg').value=$('nv').value}
+function syncR(){$('nv').value=$('rg').value}
+
+function render(){
+ $('modes').innerHTML=[['study','📖 Ôn tập (đúng mới qua, có hướng dẫn)'],['exam','📝 Thi thử (nộp bài mới chấm)']].map(m=>`<button class="mode ${mode==m[0]?'on':''}" onclick="setMode('${m[0]}')">${m[1]}</button>`).join('');
+ let tt=0,td=0;
+ $('tabs').innerHTML=B.map((x,b)=>{const n=x.q.length;let d=0;for(let i=0;i<n;i++)if(fbk(b,i)&&ok(b,i))d++;tt+=n;td+=d;
+  return `<button class="tab ${b==cb?'on':''}" onclick="setB(${b})">Bài ${b+1}<div class="c">${d}/${n} ✔</div></button>`}).join('');
+ $('pb').style.width=(td/tt*100)+'%';$('tot').textContent=`Tiến độ: ${td}/${tt} câu đúng`;
+ const bk=B[cb],q=bk.q[ci],k=cb+'-'+ci,r=R[k]||{},show=fbk(cb,ci),good=ok(cb,ci);
+ let h=`<div class="card st"><h2>${bk.t}</h2>${bk.s}${bk.h||''}\n<b>Yêu cầu:</b></div>`;
+ if(SUB[cb]&&mode=='exam'){const c=bk.q.filter((_,i)=>ok(cb,i)).length;h+=`<div class="score">🏁 Kết quả ${bk.t.split('.')[0]}: <b>${c}/${bk.q.length}</b> câu đúng (${Math.round(c/bk.q.length*100)}%) – xem từng câu để đọc hướng dẫn</div>`}
+ h+=`<div class="card"><div class="qh">Câu ${ci+1}/${bk.q.length}</div><div class="qt">${q.q}</div>`;
+ const list=q.o?q.o.map((t,i)=>[t,i]):opts(cb,ci).map(v=>[fmt(v,q.u),v]);
+ list.forEach((o,j)=>{const isC=q.o?o[1]===q.c:Math.abs(o[1]-q.a)<.005,picked=r.v!==undefined&&(q.o?r.v===o[1]:Math.abs(r.v-o[1])<.005);
+  let cl='';if(show){if(isC)cl='ok';else if(picked)cl='bad'}else if(picked)cl=mode=='study'?'bad':'sel';
+  h+=`<button class="opt ${cl}" ${show?'disabled':''} onclick="pick(${typeof o[1]=='number'&&!q.o?o[1]:o[1]})"><b>${L[j]}</b><span>${o[0]}</span></button>`});
+ if(!q.o){const a=q.a,step=q.u=='%'?1:a>=1000?1000:Number.isInteger(a)?1:.01,mx=q.u=='%'?100:Math.max(10,Math.ceil(a*2/step)*step),val=r.v!==undefined?r.v:0;
+  h+=`<div class="num"><div class="row" style="justify-content:flex-start"><span>✍ Hoặc tự nhập / kéo chọn số (${q.u}):</span><input type="number" id="nv" step="${step}" value="${val}" oninput="syncN()" ${show?'disabled':''}><button class="go" ${show?'disabled':''} onclick="chk()">${mode=='study'?'Kiểm tra':'Chốt đáp án'}</button></div><input type="range" id="rg" min="0" max="${mx}" step="${step}" value="${val}" oninput="syncR()" ${show?'disabled':''}></div>`}
+ if(mode=='study'){if(good)h+=`<div class="msg good">✔ Chính xác! Giỏi lắm!</div>`;else if(r.v!==undefined&&!r.rev)h+=`<div class="msg err">✘ Chưa đúng – thử lại nhé! <button onclick="reveal()">Xem đáp án & hướng dẫn</button></div>`;else if(!r.rev)h+=`<div class="msg" style="opacity:.8">Chọn đáp án hoặc nhập số rồi kiểm tra. Không giới hạn thời gian.</div>`}
+ else if(!SUB[cb])h+=`<div class="msg" style="opacity:.85">${r.v!==undefined?'Đã chọn – có thể đổi trước khi nộp bài.':'Chưa trả lời.'}</div>`;
+ if(show){const ans=q.o?q.o[q.c]:fmt(q.a,q.u);h+=`<div class="ex"><b>${good?'✔':'💡'} Đáp án chuẩn: ${ans}</b>\n${q.e}</div>`}
+ h+=`<div class="row" style="margin-top:14px"><button onclick="go(-1)" ${ci==0?'disabled':''}>◀ Câu trước</button><button onclick="go(1)" ${ci==bk.q.length-1?'disabled':''}>Câu sau ▶</button>${mode=='exam'&&!SUB[cb]?`<button class="go" onclick="submit()">📨 Nộp bài ${cb+1}</button>`:''}</div></div>`;
+ h+=`<div class="card dots"><div class="row">${bk.q.map((_,i)=>`<button class="${stat(cb,i)} ${i==ci?'cur':''}" onclick="ci=${i};render()">${i+1}</button>`).join('')}</div></div>`;
+ $('app').innerHTML=h;
+}
+
+/* ---------- fireworks ---------- */
+const cv=$('fw'),cx=cv.getContext('2d');let P=[],run=false;
+function rs(){cv.width=innerWidth;cv.height=innerHeight}rs();addEventListener('resize',rs);
+function boom(){for(let k=0;k<5;k++)setTimeout(()=>{const x=innerWidth*(.15+Math.random()*.7),y=innerHeight*(.15+Math.random()*.45),hue=[270,220,45,0,300][k%5];
+ for(let i=0;i<70;i++){const a=Math.random()*6.28,s=2+Math.random()*5;P.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1,h:hue+Math.random()*30})}
+ if(!run){run=true;loop()}},k*220)}
+function loop(){cx.clearRect(0,0,cv.width,cv.height);P=P.filter(p=>p.l>0);
+ for(const p of P){p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.vx*=.985;p.l-=.014;cx.fillStyle=`hsla(${p.h},100%,60%,${p.l})`;cx.beginPath();cx.arc(p.x,p.y,2.6,0,6.28);cx.fill()}
+ if(P.length)requestAnimationFrame(loop);else run=false}
+render();
+</script>
+</body>
+</html>
